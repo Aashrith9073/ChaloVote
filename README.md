@@ -14,4 +14,6 @@ Plan a trip with friends, where:
 ### Workflow (3 simple steps)  
 1. **Create a trip**  
 2. **Add participants**  
-3. **Send SMS or emails** to collect preferences  
+3. **Send SMS or emails** to collect preferences
+
+

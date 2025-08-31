@@ -1,7 +1,7 @@
 
 from sqlalchemy import Column, Integer, String, ForeignKey, JSON
 from sqlalchemy.orm import relationship
-
+from sqlalchemy import UniqueConstraint
 from app.core.database import Base
 
 
@@ -22,12 +22,13 @@ class Participant(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     # You can store phone numbers or emails here for notifications
-    contact_info = Column(String, unique=True, index=True)
+    contact_info = Column(String, index=True)
     trip_id = Column(Integer, ForeignKey("trips.id"))
 
     # This links a Participant back to its Trip
     trip = relationship("Trip", back_populates="participants")
     survey_response = relationship("SurveyResponse", uselist=False, back_populates="participant")
+    __table_args__ = (UniqueConstraint('contact_info', 'trip_id', name='_contact_trip_uc'),)
 
 
 class SurveyResponse(Base):

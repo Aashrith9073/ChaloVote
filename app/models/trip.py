@@ -52,3 +52,11 @@ class Recommendation(Base):
     estimated_budget = Column(String)
 
     trip = relationship("Trip", back_populates="recommendations")
+
+class Vote(Base):
+    __tablename__ = "votes"
+    id = Column(Integer, primary_key=True, index=True)
+    participant_id = Column(Integer, ForeignKey("participants.id"))
+    # Storing ranked list of recommendation IDs, e.g., [3, 1, 2]
+    ranked_choices = Column(JSON)
+    __table_args__ = (UniqueConstraint('participant_id', name='_participant_vote_uc'),)

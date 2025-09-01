@@ -1,6 +1,6 @@
 
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 # --- Participant Schemas ---
 class ParticipantBase(BaseModel):
@@ -51,3 +51,8 @@ class Trip(TripBase):
         from_attributes = True # Pydantic V2
         # orm_mode = True # Pydantic V1
 
+class SurveyResponseCreate(BaseModel):
+    preferences: Dict[str, Any]
+
+class VoteCreate(BaseModel):
+    ranked_choices: List[int] # A list of recommendation IDs in order of preference

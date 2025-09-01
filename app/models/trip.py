@@ -1,4 +1,3 @@
-
 from sqlalchemy import Column, Integer, String, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy import UniqueConstraint
@@ -13,9 +12,12 @@ class Trip(Base):
     # Status can be: 'planning', 'voting', 'completed'
     status = Column(String, default="planning")
 
-    # This creates the link between a Trip and its Participants
+    winner_recommendation_id = Column(Integer, ForeignKey("recommendations.id"), nullable=True)
+    recommendations = relationship("Recommendation", foreign_keys="[Recommendation.trip_id]", back_populates="trip")
+
+
+    winner = relationship("Recommendation", foreign_keys=[winner_recommendation_id])
     participants = relationship("Participant", back_populates="trip")
-    recommendations = relationship("Recommendation", back_populates="trip")
 
 
 class Participant(Base):
@@ -51,7 +53,7 @@ class Recommendation(Base):
     reason = Column(String)
     estimated_budget = Column(String)
 
-    trip = relationship("Trip", back_populates="recommendations")
+    trip = relationship("Trip", back_populates="recommendations", foreign_keys=[trip_id])
 
 class Vote(Base):
     __tablename__ = "votes"

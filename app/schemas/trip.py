@@ -46,6 +46,7 @@ class Trip(TripBase):
     # When we retrieve a trip, we want to see its participants
     participants: List[Participant] = []
     recommendations: List[Recommendation] = []
+    winner: Optional[Recommendation] = None
 
     class Config:
         from_attributes = True # Pydantic V2

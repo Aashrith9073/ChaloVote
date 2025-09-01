@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -45,17 +44,20 @@ async def submit_vote(request: Request, participant_id: int, db: Session = Depen
     return {"message": "Vote submitted successfully!"}
 
 
-@router.get("/trip/{trip_id}/results", response_model=schemas.Recommendation)
+@router.get("/trip/{trip_id}/results", response_model=schemas.Trip)
 def get_trip_results(trip_id: int, db: Session = Depends(get_db)):
     """
     Tallies the votes for a trip and returns the winning destination.
     """
     winner = voting_service.tally_votes(trip_id=trip_id, db=db)
+    trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
 
     if winner:
-        # Finalize the trip by updating its status
-        trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
+        # Update the trip's status and save the winner's ID
         trip.status = "completed"
+        trip.winner_recommendation_id = winner.id
         db.commit()
+        db.refresh(trip)
 
-    return winner
+        # Return the entire trip object
+    return trip

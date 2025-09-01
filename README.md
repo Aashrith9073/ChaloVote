@@ -91,5 +91,5 @@ Follow these instructions to get a copy of the project up and running on your lo
     ```
 
 6.  **Access the application:**
-    -   The API will be running at `http://127.0.0.1:8000`.
-    -   Access the interactive API documentation (powered by Swagger UI) at `http://127.0.0.1:8000/docs`.
+    -   The API will be running at http://127.0.0.1:8000.
+    -   Access the interactive API documentation (powered by Swagger UI) at http://127.0.0.1:8000/docs.

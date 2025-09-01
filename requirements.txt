@@ -1,7 +1,7 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-alembic
-psycopg2-binary
-pydantic-settings
-jinja2
+fastapi==0.116.1
+litellm==1.76.1
+pydantic==2.11.7
+pydantic_settings==2.10.1
+sendgrid==6.12.4
+SQLAlchemy==2.0.43
+twilio==9.7.2

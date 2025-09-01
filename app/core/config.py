@@ -13,5 +13,9 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_PHONE_NUMBER: str = ""
 
+    OPENAI_API_KEY: str = ""
+
+    HUGGINGFACE_API_TOKEN: str = ""
+
 # Create a single instance of the settings to be used throughout the app
 settings = Settings()

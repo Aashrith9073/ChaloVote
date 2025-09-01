@@ -1,2 +1,2 @@
 
-from .trip import Trip, Participant, SurveyResponse
+from .trip import Trip, Participant, SurveyResponse, Recommendation

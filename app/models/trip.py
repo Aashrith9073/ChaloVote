@@ -15,6 +15,7 @@ class Trip(Base):
 
     # This creates the link between a Trip and its Participants
     participants = relationship("Participant", back_populates="trip")
+    recommendations = relationship("Recommendation", back_populates="trip")
 
 
 class Participant(Base):
@@ -41,3 +42,13 @@ class SurveyResponse(Base):
     preferences = Column(JSON)
 
     participant = relationship("Participant", back_populates="survey_response")
+
+class Recommendation(Base):
+    __tablename__ = "recommendations"
+    id = Column(Integer, primary_key=True, index=True)
+    trip_id = Column(Integer, ForeignKey("trips.id"))
+    destination_name = Column(String)
+    reason = Column(String)
+    estimated_budget = Column(String)
+
+    trip = relationship("Trip", back_populates="recommendations")

@@ -17,6 +17,21 @@ class Participant(ParticipantBase):
         from_attributes = True # Pydantic V2
         # orm_mode = True # Pydantic V1
 
+class RecommendationBase(BaseModel):
+    destination_name: str
+    reason: str
+    estimated_budget: str
+
+class RecommendationCreate(RecommendationBase):
+    pass
+
+class Recommendation(RecommendationBase):
+    id: int
+    trip_id: int
+
+    class Config:
+        from_attributes = True
+
 # --- Trip Schemas ---
 class TripBase(BaseModel):
     name: str
@@ -30,7 +45,9 @@ class Trip(TripBase):
     status: str
     # When we retrieve a trip, we want to see its participants
     participants: List[Participant] = []
+    recommendations: List[Recommendation] = []
 
     class Config:
         from_attributes = True # Pydantic V2
         # orm_mode = True # Pydantic V1
+

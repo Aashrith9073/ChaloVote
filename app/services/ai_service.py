@@ -4,12 +4,35 @@ import litellm
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app import models, schemas
+from collections import Counter
 
 # This is a "mock" response for testing without a real API key
 MOCK_RESPONSE = [
     {"destination": "Kyoto, Japan", "reason": "Rich cultural history and beautiful temples.", "budget_tier": "$$$ - Expensive"},
     {"destination": "Medellín, Colombia", "reason": "Vibrant city with a perfect climate and friendly locals.", "budget_tier": "$ - Budget-Friendly"}
 ]
+
+
+def _aggregate_preferences(trip_id: int, db: Session) -> dict:
+    """Helper function to gather and combine all survey responses for a trip."""
+    responses = db.query(models.SurveyResponse).join(models.Participant).filter(
+        models.Participant.trip_id == trip_id).all()
+
+    if not responses:
+        # Fallback to defaults if no surveys are submitted
+        return {"budget": "Moderate", "interests": ["culture", "food"]}
+
+    all_interests = []
+    for res in responses:
+        all_interests.extend(res.preferences.get("interests", []))
+
+    # Return a summary of the group's preferences
+    return {
+        # For simplicity, we'll just show the most common interests
+        "interests": [item for item, count in Counter(all_interests).most_common(5)],
+        # In a real app, you might average budgets or find a common range
+        "budget": responses[0].preferences.get("budget", "Moderate")
+    }
 
 def generate_recommendations(trip_id: int, db: Session):
     trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
@@ -18,11 +41,11 @@ def generate_recommendations(trip_id: int, db: Session):
 
     # In the future, we'll collect participant preferences from the survey
     # For now, we'll use placeholder preferences
-    prompt = create_travel_prompt({
-        "budget": "Moderate",
-        "interests": ["history", "food", "nature"],
-        "participants_count": len(trip.participants)
-    })
+    aggregated_prefs = _aggregate_preferences(trip_id, db)
+    aggregated_prefs["participants_count"] = len(trip.participants)
+
+    prompt = create_travel_prompt(aggregated_prefs)
+
 
     if settings.OPENAI_API_KEY:
         try:

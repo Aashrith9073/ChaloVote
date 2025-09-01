@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vote on Your Trip!</title>
+</head>
+<body>
+    <h1>Vote for: {{ trip.name }}</h1>
+    <p>Rank your choices from 1 (top choice) to {{ recommendations|length }}.</p>
+
+    <form method="post">
+        {% for rec in recommendations %}
+        <div>
+            <h3>{{ rec.destination_name }}</h3>
+            <p><strong>Why?</strong> {{ rec.reason }}</p>
+            <p><strong>Budget:</strong> {{ rec.estimated_budget }}</p>
+            <label>
+                Rank: <input type="number" name="rank_{{ rec.id }}" min="1" max="{{ recommendations|length }}" required>
+            </label>
+        </div>
+        <hr>
+        {% endfor %}
+        <button type="submit">Cast Your Vote</button>
+    </form>
+</body>
+</html>

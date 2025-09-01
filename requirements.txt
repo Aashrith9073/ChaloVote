@@ -1,4 +1,6 @@
 fastapi==0.116.1
+python-multipart
+uvicorn[standard]
 litellm==1.76.1
 pydantic==2.11.7
 pydantic_settings==2.10.1

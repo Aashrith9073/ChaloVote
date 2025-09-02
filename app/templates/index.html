@@ -1,10 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block content %}
+<div class="bg-white p-8 rounded-lg shadow-md max-w-lg mx-auto">
+    <h1 class="text-2xl font-bold mb-6 text-center">Create a New Trip</h1>
+    <form hx-post="/trips/" hx-target="#content" hx-swap="innerHTML">
+        <div class="mb-4">
+            <label for="name" class="block text-gray-700 font-bold mb-2">Trip Name:</label>
+            <input type="text" id="name" name="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" required>
+        </div>
+
+        <div id="participants-container">
+            </div>
+
+        <button type="button" hx-get="/trips/add-participant-input" hx-target="#participants-container" hx-swap="beforeend" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
+            Add Participant
+        </button>
+
+        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+            Create Trip & Send Invites
+        </button>
+    </form>
+</div>
+{% endblock %}

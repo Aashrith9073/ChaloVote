@@ -9,10 +9,8 @@ Stop the endless group chat debates! ChaloVote is an AI-powered web application 
 
 ---
 
-## 🚀 Live Demo
-
-**(Replace this with your Vercel deployment link)**
-`https://chalovote-your-name.vercel.app/`
+## 🚀 Live Demo 
+https://chalo-vote.vercel.app/
 
 ---
 

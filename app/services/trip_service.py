@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.services import notification_service
 from app.models.trip import Trip
+from app.core.config import settings
 
 
 
@@ -25,7 +26,7 @@ def create_trip(db: Session, trip: schemas.TripCreate):
     db.commit()
     for p in participants:
         # In the future, this link will point to a unique survey page
-        survey_link = f"http://yourapp.com/survey/{p.id}"
+        survey_link = f"{settings.BASE_URL}/survey/{p.id}"
         message = (f"You've been invited to the trip '{db_trip.name}'! "
                    f"Please fill out your preferences here: {survey_link}")
 

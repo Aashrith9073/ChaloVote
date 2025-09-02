@@ -24,6 +24,6 @@ templates = Jinja2Templates(directory="app/templates")
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to ChaloVote! 🌍"}
+#@app.get("/")
+#def read_root():
+ #   return {"message": "Welcome to ChaloVote! 🌍"}

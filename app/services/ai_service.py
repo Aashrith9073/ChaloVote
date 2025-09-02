@@ -43,22 +43,32 @@ def generate_recommendations(trip_id: int, db: Session):
     aggregated_prefs = _aggregate_preferences(trip_id, db)
     aggregated_prefs["participants_count"] = len(trip.participants)
 
-    prompt = create_travel_prompt(aggregated_prefs)
+    #prompt = create_travel_prompt(aggregated_prefs)
+    messages = create_travel_prompt_messages(aggregated_prefs)
 
 
-    if settings.OPENAI_API_KEY:
+    if settings.COHERE_API_KEY:
         try:
+            print(f"DEBUG: Attempting to use Cohere AI...")
             response = litellm.completion(
-                model="huggingface/mistralai/Mistral-7B-Instruct-v0.2",
-                messages=[{"role": "user", "content": prompt}],
-                response_format={"type": "json_object"} # Ask for JSON output
+                model="command-r",
+                messages=messages,
+                api_key=settings.COHERE_API_KEY,
+                #response_format={"type": "json_object"} # Ask for JSON output
             )
-            recommendations_data = json.loads(response.choices[0].message.content).get("recommendations", [])
+            response_text = response.choices[0].message.content
+            if response_text:  # Check if the response is not empty
+                clean_json_text = response_text.strip().replace("```json", "").replace("```", "").strip()
+                recommendations_data = json.loads(clean_json_text).get("recommendations", [])
+            else:
+                # If the AI gives an empty response, fall back to mock data
+                print("Warning: AI returned an empty response. Falling back to mock data.")
+                recommendations_data = MOCK_RESPONSE
         except Exception as e:
             print(f"Error calling LLM: {e}")
-            recommendations_data = MOCK_RESPONSE # Fallback to mock data on error
+            recommendations_data = MOCK_RESPONSE
     else:
-        print("--- SKIPPING LLM CALL: HUGGINGFACE_API_TOKEN not found. Using mock data. ---")
+        print("--- SKIPPING LLM CALL: COHERE_API_KEY not found. Using mock data. ---")
         recommendations_data = MOCK_RESPONSE
 
     # Save the recommendations to the database
@@ -79,25 +89,23 @@ def generate_recommendations(trip_id: int, db: Session):
 
     return db_recommendations
 
-def create_travel_prompt(preferences: dict) -> str:
-    return f"""
-    You are an expert travel planner. Generate 5 personalized travel destination recommendations
-    for a group of {preferences['participants_count']} people.
 
-    **Group Preferences:**
-    - **Budget:** {preferences['budget']}
-    - **Interests:** {', '.join(preferences['interests'])}
 
-    Return your response as a single JSON object with a key "recommendations", which is a list of objects.
-    Each object in the list must have these exact keys: "destination", "reason", "budget_tier".
-    Example format:
-    {{
-      "recommendations": [
-        {{
-          "destination": "Lisbon, Portugal",
-          "reason": "Offers a vibrant culture with great food that fits a moderate budget.",
-          "budget_tier": "$$ - Moderate"
-        }}
-      ]
-    }}
-    """
+def create_travel_prompt_messages(preferences: dict) -> list:
+    """Creates a clearer, more robust prompt for the AI."""
+    system_prompt = "You are an expert travel planner who is an expert at generating JSON."
+    user_prompt = f"""
+Generate 5 personalized travel destination recommendations for a group of {preferences['participants_count']} people.
+
+**Group Preferences:**
+- Budget: {preferences['budget']}
+- Interests: {', '.join(preferences['interests'])}
+
+Please return your response as a single, valid JSON object. The object should have a single key named "recommendations", which is a list of objects.
+Each object in the list should have the following keys: "destination", "reason", "budget_tier".
+Do not include any text, explanations, or markdown formatting like ```json before or after the JSON object.
+"""
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]

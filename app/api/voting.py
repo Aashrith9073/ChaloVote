@@ -44,20 +44,22 @@ async def submit_vote(request: Request, participant_id: int, db: Session = Depen
     return {"message": "Vote submitted successfully!"}
 
 
-@router.get("/trip/{trip_id}/results", response_model=schemas.Trip)
-def get_trip_results(trip_id: int, db: Session = Depends(get_db)):
+@router.get("/trip/{trip_id}/results", response_class=HTMLResponse)
+def get_trip_results(request: Request, trip_id: int, db: Session = Depends(get_db)):
     """
-    Tallies the votes for a trip and returns the winning destination.
+    Tallies the votes and returns an HTML page with the winner.
     """
     winner = voting_service.tally_votes(trip_id=trip_id, db=db)
     trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
 
     if winner:
-        # Update the trip's status and save the winner's ID
         trip.status = "completed"
         trip.winner_recommendation_id = winner.id
         db.commit()
         db.refresh(trip)
 
-        # Return the entire trip object
-    return trip
+    # Render the new results template
+    return templates.TemplateResponse(
+        "trip_results.html",
+        {"request": request, "trip": trip, "winner": winner}
+    )

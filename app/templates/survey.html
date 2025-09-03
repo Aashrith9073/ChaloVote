@@ -8,11 +8,18 @@
     <h1>Survey for {{ trip_name }}</h1>
     <p>Hi {{ contact_info }}, please tell us your preferences!</p>
     <form action="/surveys/{{ participant_id }}" method="post">
-        <label for="budget">Budget:</label><br>
-        <input type="text" id="budget" name="budget" value="Moderate"><br>
-        <label for="interests">Interests (comma-separated):</label><br>
-        <input type="text" id="interests" name="interests" value="food, history, beach"><br><br>
-        <input type="submit" value="Submit">
-    </form>
+
+    <label for="location">Your Starting City:</label><br>
+    <input type="text" id="location" name="location" placeholder="e.g., Visakhapatnam" required style="margin-bottom: 1em;">
+
+    <label for="budget">Budget:</label><br>
+    <input type="text" id="budget" name="budget" value="Moderate" style="margin-bottom: 1em;">
+
+    <label for="interests">Interests (comma-separated):</label><br>
+    <input type="text" id="interests" name="interests" value="food, history, beach" style="margin-bottom: 1em;">
+
+    <input type="submit" value="Submit">
+
+</form>
 </body>
 </html>

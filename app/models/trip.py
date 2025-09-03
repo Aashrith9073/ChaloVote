@@ -27,6 +27,7 @@ class Participant(Base):
     # You can store phone numbers or emails here for notifications
     contact_info = Column(String, index=True)
     trip_id = Column(Integer, ForeignKey("trips.id"))
+    start_location = Column(String, nullable=True)
 
     # This links a Participant back to its Trip
     trip = relationship("Trip", back_populates="participants")
@@ -52,6 +53,7 @@ class Recommendation(Base):
     destination_name = Column(String)
     reason = Column(String)
     estimated_budget = Column(String)
+    details = Column(JSON, nullable=True)  # <-- ADD THIS LINE
 
     trip = relationship("Trip", back_populates="recommendations", foreign_keys=[trip_id])
 

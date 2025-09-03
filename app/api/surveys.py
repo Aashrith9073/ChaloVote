@@ -23,12 +23,16 @@ def get_survey_form(request: Request, participant_id: int, db: Session = Depends
     )
 
 @router.post("/surveys/{participant_id}")
-def submit_survey(participant_id: int, budget: str = Form(), interests: str = Form(), db: Session = Depends(get_db)):
+def submit_survey(participant_id: int,location: str = Form(), budget: str = Form(), interests: str = Form(), db: Session = Depends(get_db)):
     # In a real app, you'd have more robust validation
     preferences = {
         "budget": budget,
         "interests": [interest.strip() for interest in interests.split(',')]
     }
+    participant = db.query(models.Participant).filter(models.Participant.id == participant_id).first()
+    if participant:
+        participant.start_location = location
+
     survey_response = models.SurveyResponse(
         participant_id=participant_id,
         preferences=preferences

@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     RAPIDAPI_KEY: str = ""
     GOOGLE_MAPS_API_KEY: str = ""
 
+    MAPMYINDIA_API_KEY: str = ""
     BASE_URL: str = "http://localhost:8000"
 
 # Create a single instance of the settings to be used throughout the app

@@ -1,4 +1,5 @@
 import requests
+import math
 from app.core.config import settings
 
 
@@ -34,30 +35,61 @@ def get_flight_prices(origin_city: str, dest_city: str, date: str):
         print(f"Error fetching flight data: {e}")
         return [{"airline": "Could not retrieve flight prices.", "price": ""}]
 
-def get_route_info(origin_city: str, dest_city: str, mode: str = "driving"):
-    """Gets route info from Google Maps Directions API."""
-    if not settings.GOOGLE_MAPS_API_KEY:
-        return "Route info not available (Google Maps API key not set)."
 
-    print(f"AGENT TOOL: Getting {mode} route from {origin_city} to {dest_city}...")
-    url = "https://maps.googleapis.com/maps/api/directions/json"
-    params = {
-        "origin": origin_city,
-        "destination": dest_city,
-        "mode": "driving",  # or "two_wheeler" for bikes
-        "key": settings.GOOGLE_MAPS_API_KEY
+def get_coordinates(city_name: str):
+    """Converts a city name to latitude and longitude using MapmyIndia's API."""
+    if not settings.MAPMYINDIA_API_KEY:
+        return None
+
+    # This is a simplified geocoding endpoint from MapmyIndia
+    url = f"https://atlas.mapmyindia.com/api/places/search/json?query={city_name}"
+    headers = {
+        'Authorization': f'bearer {settings.MAPMYINDIA_API_KEY}',
     }
     try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()  # This will raise an exception for HTTP errors
+        response = requests.get(url, headers=headers)
         data = response.json()
-        if data["status"] == "OK":
-            route = data["routes"][0]["legs"][0]
-            distance = route["distance"]["text"]
-            duration = route["duration"]["text"]
-            return f"{mode.capitalize()} distance is {distance}, taking about {duration}."
+        if 'suggestedLocations' in data and data['suggestedLocations']:
+            # Get the coordinates from the first result
+            coords = data['suggestedLocations'][0]
+            return f"{coords['longitude']},{coords['latitude']}"
     except Exception as e:
-        print(f"Error fetching route data: {e}")
+        print(f"Error geocoding '{city_name}': {e}")
+    return None
+
+
+def get_route_info(origin_city: str, dest_city: str, mode: str = "driving"):
+    """Gets route info from MapmyIndia Directions API."""
+    if not settings.MAPMYINDIA_API_KEY:
+        return "Route info not available (MapmyIndia key not set)."
+
+    print(f"AGENT TOOL: Getting {mode} route from {origin_city} to {dest_city} via MapmyIndia...")
+
+    # Step 1: Convert city names to coordinates
+    origin_coords = get_coordinates(origin_city)
+    dest_coords = get_coordinates(dest_city)
+
+    if not origin_coords or not dest_coords:
+        return f"Could not find coordinates for {origin_city} or {dest_city}."
+
+    # Step 2: Use coordinates to get the route
+    url = f"https://apis.mapmyindia.com/advancedmaps/v1/{settings.MAPMYINDIA_API_KEY}/route_adv/driving/{origin_coords};{dest_coords}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if data.get("responseCode") == 200 and data.get("routes"):
+            route = data['routes'][0]
+            distance_km = round(route['distance'] / 1000)
+
+            # Convert duration from seconds to a readable format
+            duration_seconds = route['duration']
+            hours = math.floor(duration_seconds / 3600)
+            minutes = round((duration_seconds % 3600) / 60)
+
+            return f"Driving distance is {distance_km} km, taking about {hours} hours and {minutes} minutes."
+    except Exception as e:
+        print(f"Error fetching MapmyIndia route data: {e}")
     return "Could not retrieve route information."
 
 

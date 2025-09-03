@@ -132,8 +132,7 @@ def generate_recommendations(trip_id: int, db: Session):
                     origin = participant.start_location
                     if origin:
                         # Get an embeddable map URL from Google
-                        map_url = f"https://www.google.com/maps/embed/v1/directions?key={settings.GOOGLE_MAPS_API_KEY}&origin={origin}&destination={dest_name}"
-
+                        map_url = f"https://maps.mapmyindia.com/?saddr={origin}&daddr={dest_name}"
                         travel_details_by_person[participant.contact_info] = {
                             "flights": agent_service.get_flight_prices(origin, dest_name, "2025-10"),
                             "route": agent_service.get_route_info(origin, dest_name, "driving"),

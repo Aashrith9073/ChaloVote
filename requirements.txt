@@ -1,9 +1,26 @@
-fastapi==0.116.1
-python-multipart
+# Core Framework
+fastapi
 uvicorn[standard]
-litellm==1.76.1
-pydantic==2.11.7
-pydantic_settings==2.10.1
-sendgrid==6.12.4
-SQLAlchemy==2.0.43
-twilio==9.7.2
+python-multipart
+
+# Database
+sqlalchemy
+alembic
+
+# AI & APIs
+litellm
+google-cloud-aiplatform
+cohere
+
+# Notifications
+twilio
+sendgrid
+
+# Agent Tools
+requests
+beautifulsoup4
+lxml
+
+# Configuration & Templating
+pydantic-settings
+Jinja2

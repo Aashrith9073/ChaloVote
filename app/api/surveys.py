@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import APIRouter, Depends, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -12,6 +12,8 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/survey/{participant_id}", response_class=HTMLResponse)
 def get_survey_form(request: Request, participant_id: int, db: Session = Depends(get_db)):
     participant = db.query(models.Participant).filter(models.Participant.id == participant_id).first()
+    if not participant:
+        raise HTTPException(status_code=404, detail="Participant not found")
     return templates.TemplateResponse(
         "survey.html",
         {

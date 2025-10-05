@@ -1,131 +1,71 @@
-import requests
-import math
+# app/services/agent_service.py
+import litellm
+import time
+import json
 from app.core.config import settings
 
-
-# app/services/agent_service.py
-
-def get_flight_prices(origin_city: str, dest_city: str, date: str):
-    """Tool to get flight prices from Skyscanner."""
-    if not settings.RAPIDAPI_KEY:
-        return [{"airline": "Flight info not available.", "price": "N/A"}]
-
-    origin_iata = get_iata_code(origin_city)
-    dest_iata = get_iata_code(dest_city)
-
-    url = f"https://skyscanner-skyscanner-flight-search-v1.p.rapidapi.com/apiservices/browsequotes/v1.0/IN/INR/en-US/{origin_iata}-sky/{dest_iata}-sky/{date}"
-    headers = {
-        "X-RapidAPI-Key": settings.RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "skyscanner-skyscanner-flight-search-v1.p.rapidapi.com"
-    }
+def _ask_gemini(question: str) -> str | None:
+    """A generic internal tool to ask Gemini a question."""
+    if not settings.GEMINI_API_KEY:
+        print("ERROR: Gemini API key not found for agent tool.")
+        return None
     try:
-        response = requests.get(url, headers=headers)
-        data = response.json()
-        flights = []
-        for quote in data.get("Quotes", [])[:3]: # Get top 3 quotes
-            carrier_name = "Unknown Airline"
-            # Find the carrier name from the carrier ID
-            for carrier in data.get("Carriers", []):
-                if carrier["CarrierId"] == quote["OutboundLeg"]["CarrierIds"][0]:
-                    carrier_name = carrier["Name"]
-                    break
-            flights.append({"airline": carrier_name, "price": f"₹{quote['MinPrice']}"})
-        return flights if flights else [{"airline": "No direct flights found.", "price": ""}]
+        print(f"AGENT TOOL: Asking Gemini -> '{question}'")
+        time.sleep(2)
+        response = litellm.completion(
+            model="vertex_ai/gemini-2.5-flash",
+            messages=[{"role": "user", "content": question}],
+            api_key=settings.GEMINI_API_KEY
+        )
+        return response.choices[0].message.content
     except Exception as e:
-        print(f"Error fetching flight data: {e}")
-        return [{"airline": "Could not retrieve flight prices.", "price": ""}]
-
-
-def get_coordinates(city_name: str):
-    """Converts a city name to latitude and longitude using MapmyIndia's API."""
-    if not settings.MAPMYINDIA_API_KEY:
+        print(f"Error calling Gemini tool: {e}")
         return None
 
-    # This is a simplified geocoding endpoint from MapmyIndia
-    url = f"https://atlas.mapmyindia.com/api/places/search/json?query={city_name}"
-    headers = {
-        'Authorization': f'bearer {settings.MAPMYINDIA_API_KEY}',
-    }
+def get_route_info(origin_city: str, dest_city: str):
+    """Gets route distance and duration from Gemini."""
+    question = f"""What is the driving distance in kilometers and estimated duration by car from {origin_city}, India to {dest_city}, India? 
+Respond ONLY with a valid JSON object with keys "distance_km" (int) and "duration_text" (str)."""
+    response_text = _ask_gemini(question)
     try:
-        response = requests.get(url, headers=headers)
-        data = response.json()
-        if 'suggestedLocations' in data and data['suggestedLocations']:
-            # Get the coordinates from the first result
-            coords = data['suggestedLocations'][0]
-            return f"{coords['longitude']},{coords['latitude']}"
-    except Exception as e:
-        print(f"Error geocoding '{city_name}': {e}")
-    return None
+        data = json.loads(response_text)
+        return {
+            "text": f"Driving is {data.get('distance_km')} km, about {data.get('duration_text')}.",
+            "distance_km": data.get('distance_km', 0)
+        }
+    except Exception:
+        return {"text": response_text or "Could not retrieve route info.", "distance_km": 0}
 
-
-def get_route_info(origin_city: str, dest_city: str, mode: str = "driving"):
-    """Gets route info from MapmyIndia Directions API."""
-    if not settings.MAPMYINDIA_API_KEY:
-        return "Route info not available (MapmyIndia key not set)."
-
-    print(f"AGENT TOOL: Getting {mode} route from {origin_city} to {dest_city} via MapmyIndia...")
-
-    # Step 1: Convert city names to coordinates
-    origin_coords = get_coordinates(origin_city)
-    dest_coords = get_coordinates(dest_city)
-
-    if not origin_coords or not dest_coords:
-        return f"Could not find coordinates for {origin_city} or {dest_city}."
-
-    # Step 2: Use coordinates to get the route
-    url = f"https://apis.mapmyindia.com/advancedmaps/v1/{settings.MAPMYINDIA_API_KEY}/route_adv/driving/{origin_coords};{dest_coords}"
-
+def get_flight_prices(origin_city: str, dest_city: str):
+    """Gets estimated flight prices from Gemini."""
+    question = f"""What are the estimated budget-friendly flight prices for one person from {origin_city} to {dest_city}, India? 
+Respond ONLY with a valid JSON object with one key 'price_estimate' (str). Example: {{"price_estimate": "Around ₹4,500 - ₹6,000"}}"""
+    response_text = _ask_gemini(question)
     try:
-        response = requests.get(url)
-        data = response.json()
-        if data.get("responseCode") == 200 and data.get("routes"):
-            route = data['routes'][0]
-            distance_km = round(route['distance'] / 1000)
+        return json.loads(response_text).get("price_estimate", "Estimate not available.")
+    except Exception:
+        return response_text or "Estimate not available."
 
-            # Convert duration from seconds to a readable format
-            duration_seconds = route['duration']
-            hours = math.floor(duration_seconds / 3600)
-            minutes = round((duration_seconds % 3600) / 60)
-
-            return f"Driving distance is {distance_km} km, taking about {hours} hours and {minutes} minutes."
-    except Exception as e:
-        print(f"Error fetching MapmyIndia route data: {e}")
-    return "Could not retrieve route information."
-
-
-
-
-def get_hotel_prices(dest_city: str):
-    """Gets a list of hotel prices from a RapidAPI endpoint."""
-    if not settings.RAPIDAPI_KEY:
-        return [{"name": "Hotel info not available.", "price": "N/A"}]
-
-    url = "https://booking-com.p.rapidapi.com/v1/hotels/search"  # Example URL
-    querystring = {"dest_id": "-2092174", "order_by": "popularity", "filter_by_currency": "INR", "units": "metric",
-                   "room_number": "1", "checkin_date": "2025-10-15", "checkout_date": "2025-10-18",
-                   "adults_number": "2", "locale": "en-gb", "dest_type": "city"}
-    headers = {
-        "X-RapidAPI-Key": settings.RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "booking-com.p.rapidapi.com"  # Example Host
-    }
-
+def get_hotel_recommendations(dest_city: str):
+    """Gets top 4 budget hotel/hostel recommendations from Gemini."""
+    question = f"""List the top 4 budget-friendly hostels or guesthouses in {dest_city}, India, suitable for college students. Order them by rating. 
+Respond ONLY with a valid JSON list of objects. Each object must have keys 'name', 'rating' (float or string), and 'estimated_price' (str)."""
+    response_text = _ask_gemini(question)
     try:
-        # NOTE: A real app would first need to get the dest_id for the dest_city
-        # For now, we'll use a hardcoded search and just return the first few results.
-        response = requests.get(url, headers=headers, params=querystring)
-        data = response.json()
-        hotels = []
-        for hotel in data.get('result', [])[:3]:  # Get top 3 hotels
-            hotels.append({"name": hotel.get('hotel_name'), "price": f"₹{hotel.get('min_total_price')}"})
-        return hotels if hotels else [{"name": "No hotels found.", "price": ""}]
-    except Exception as e:
-        print(f"Error fetching hotel data: {e}")
-        return [{"name": "Could not retrieve hotel prices.", "price": ""}]
+        # Use regex to find the JSON list, as Gemini might add text
+        import re
+        json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(0))
+        return [{"name": "Could not parse hotel data.", "rating": "N/A", "price": "N/A"}]
+    except Exception:
+        return [{"name": "Could not retrieve hotel data.", "rating": "N/A", "price": "N/A"}]
 
-
-def get_iata_code(city_name: str):
-    """Gets the IATA code for a city."""
-    # This is a mock. A real implementation would use another API to look this up.
-    # Example: Visakhapatnam -> VTZ, Delhi -> DEL, Mumbai -> BOM
-    iata_map = {"vizag": "VTZ", "visakhapatnam": "VTZ", "hyderabad": "HYD"}
-    return iata_map.get(city_name.lower(), "DEL") # Default to Delhi
+def get_petrol_price(city: str) -> float:
+    """Gets petrol price for a city from Gemini."""
+    question = f"What is the current price of 1 litre of petrol in {city}, India? Respond with only the number."
+    response_text = _ask_gemini(question)
+    try:
+        return float(response_text)
+    except (ValueError, TypeError):
+        return 100.0 # Fallback price

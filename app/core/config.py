@@ -30,5 +30,8 @@ class Settings(BaseSettings):
     GOOGLE_PROJECT_ID: str = ""
     GOOGLE_MAPS_API_KEY: str = ""
 
+    DATABASE_URL: str = "sqlite:///./chalovote.db" # SQLite remains the default if not set
+
+
 # Create a single instance of the settings to be used throughout the app
 settings = Settings()

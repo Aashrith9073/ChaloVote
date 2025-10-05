@@ -15,8 +15,6 @@ sendgrid
 
 # Agent Tools
 requests
-beautifulsoup4
-lxml
 
 # Configuration & Templating
 pydantic-settings

@@ -32,7 +32,6 @@ The core of ChaloVote is a multi-step agentic workflow powered by **Google Gemin
     -   It asks Gemini to find **top budget hotels** and their ratings.
     -   It calls the **Google Maps API** to get route distance and duration from each participant's starting location.
     -   It asks Gemini for the **current petrol price** in each participant's city to calculate fuel costs.
-    -   It asks Gemini for **estimated flight prices**.
 
 3.  **Synthesis**: The agent bundles all of this research data and presents it to Gemini one last time. It asks the AI to act as a travel expert and write a final, compelling summary, including a total estimated cost and a list of top stays for each destination.
 

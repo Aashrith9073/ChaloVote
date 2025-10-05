@@ -42,7 +42,7 @@ The core of ChaloVote is a multi-step agentic workflow powered by **Google Gemin
 
 -   **Backend**: FastAPI, Python 3.10, Uvicorn
 -   **Database**: SQLAlchemy ORM, SQLite (local)
--   **AI**: LiteLLM, Google Gemini (`gemini-pro`)
+-   **AI**: LiteLLM, Google Gemini (`gemini-2.5-flash`)
 -   **External APIs**: Google Maps Platform (Directions, Geocoding, Embed), Twilio, SendGrid, RapidAPI (for flights/hotels)
 -   **Frontend**: Jinja2 Templating, HTMX, Tailwind CSS
 -   **Key Packages**: `fastapi`, `uvicorn`, `sqlalchemy`, `litellm`, `google-cloud-aiplatform`, `requests`, `pydantic-settings`, `jinja2`

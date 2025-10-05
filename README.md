@@ -109,10 +109,3 @@ The core of ChaloVote is a multi-step agentic workflow powered by **Google Gemin
     - Access the interactive API documentation at `http://127.0.0.1:8000/docs`.
 
 ---
-
-## ☁️ Deployment on Vercel
-
-This application is ready for deployment on Vercel.
-1.  Connect your GitHub repository to Vercel.
-2.  In the Vercel project settings, go to **Settings > Environment Variables** and add all the keys from your `.env` file.
-3.  **Important**: For a live deployment, you must switch from SQLite to a cloud-hosted PostgreSQL database (like [Neon](https://neon.tech/)) and add its connection string as a `DATABASE_URL` environment variable.

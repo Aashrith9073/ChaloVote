@@ -5,12 +5,9 @@ python-multipart
 
 # Database
 sqlalchemy
-alembic
 
 # AI & APIs
 litellm
-google-cloud-aiplatform
-cohere
 
 # Notifications
 twilio
@@ -24,3 +21,4 @@ lxml
 # Configuration & Templating
 pydantic-settings
 Jinja2
+python-dotenv
